@@ -1,0 +1,7 @@
+numpy
+pandas
+configparser
+scikit-learn
+matplotlib
+mplfinance
+datetime
