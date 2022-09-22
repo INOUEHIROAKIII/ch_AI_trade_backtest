@@ -67,7 +67,7 @@ debug = debug_matplot.debug_plot()
 # csv.get_candlestick_and_create_csv(df_a,"急騰落検知結果10")
 # # ------------------------------------------------------------------------------
 
-print(1111)
+print(111122)
 
 ''' 今回使わない
 # # チャネル引く、matplotlib出力
