@@ -35,39 +35,38 @@ debug = debug_matplot.debug_plot()
 データを加工し、急騰落を検知
 '''
 
-# # ----------------- csvからローソクデータを取り込む ------------------------------
-# fileName = "BTCUSDT_2年_2022_8_10_15.csv"
-# candleStick = csvread.readDataFromFile(fileName)
-# # ------------------------------------------------------------------------------
+# ----------------- csvからローソクデータを取り込む ------------------------------
+fileName = "./candle_data/BTCUSDT_1か月_2022_8_9_23.csv"
+candleStick = csvread.readDataFromFile(fileName)
+# ------------------------------------------------------------------------------
  
-# # ----------------- 取得したローソク足データをデータフレームへ変換 ----------------
-# print("DFに変換します")
-# df_candleStick = csvread.fromListToDF(candleStick)
-# print("DF変換完了しました")
-# # ------------------------------------------------------------------------------
+# ----------------- 取得したローソク足データをデータフレームへ変換 ----------------
+print("DFに変換します")
+df_candleStick = csvread.fromListToDF(candleStick)
+print("DF変換完了しました")
+# ------------------------------------------------------------------------------
 
-# # -------------1分足のデータを違う足のローソク足データへdf変換---------------------
-# df = convert.df_convert_for_back(df_candleStick,1440)
-# # df2 = convert.df_convert_for_debug(df_candleStick,1440)
-
-
-# # ---------------------------------急騰落を判断----------------------------------
-# f_state_judge = [0 for i in range(len(df.index))] # 何用かに関わらず、ここでf_state_judgeを準備する
-# df_f_state_judge = pd.DataFrame({'state_judge': f_state_judge})
-
-# df_f_state_judge = trade.raise_fall_detection_ctrl(df, 1440, df_f_state_judge)
-
-# # df_f_state_judge = trade.raise_fall_detection(df,1440,f_state_judge)
-# # ------------------------------------------------------------------------------
+# -------------1分足のデータを違う足のローソク足データへdf変換---------------------
+df = convert.df_convert_for_back(df_candleStick,1440)
+# df2 = convert.df_convert_for_debug(df_candleStick,1440)
 
 
-# # ---------------------------------csv出力--------------------------------------
-# df_f_state_judge.index = df.index
-# df_a = pd.merge(df, df_f_state_judge, how='outer', left_index = True, right_index = True)
-# csv.get_candlestick_and_create_csv(df_a,"急騰落検知結果10")
-# # ------------------------------------------------------------------------------
+# ---------------------------------急騰落を判断----------------------------------
+f_state_judge = [0 for i in range(len(df.index))] # 何用かに関わらず、ここでf_state_judgeを準備する
+df_f_state_judge = pd.DataFrame({'state_judge': f_state_judge})
 
-print(111)
+df_f_state_judge = trade.raise_fall_detection_ctrl(df, 1440, df_f_state_judge)
+
+# df_f_state_judge = trade.raise_fall_detection(df,1440,f_state_judge)
+# ------------------------------------------------------------------------------
+
+
+# ---------------------------------csv出力--------------------------------------
+df_f_state_judge.index = df.index
+df_a = pd.merge(df, df_f_state_judge, how='outer', left_index = True, right_index = True)
+csv.get_candlestick_and_create_csv(df_a,"./debug_result/急騰落検知結果11")
+# ------------------------------------------------------------------------------
+
 
 ''' 今回使わない
 # # チャネル引く、matplotlib出力
