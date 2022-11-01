@@ -36,7 +36,7 @@ debug = debug_matplot.debug_plot()
 '''
 
 # ----------------- csvからローソクデータを取り込む ------------------------------
-fileName = "./candle_data/BTCUSDT_1か月_2022_8_9_23.csv"
+fileName = "./candle_data/BTCUSDT_2年_2022_8_10_15.csv"
 candleStick = csvread.readDataFromFile(fileName)
 # ------------------------------------------------------------------------------
  
@@ -55,16 +55,16 @@ df = convert.df_convert_for_back(df_candleStick,1440)
 f_state_judge = [0 for i in range(len(df.index))] # 何用かに関わらず、ここでf_state_judgeを準備する
 df_f_state_judge = pd.DataFrame({'state_judge': f_state_judge})
 
-df_f_state_judge = trade.raise_fall_detection_ctrl(df, 1440, df_f_state_judge)
+df_f_state_judge = trade.raise_fall_detection_ctrl(df, 1440, df_f_state_judge, True) # 一番始めに全体を準備する=True, f_state_judgeはすでに計算されてあり、最近のものだけを更新する=False
 
 # df_f_state_judge = trade.raise_fall_detection(df,1440,f_state_judge)
 # ------------------------------------------------------------------------------
 
 
-# ---------------------------------csv出力--------------------------------------
+# ---------------------------------急騰落結果込みでcsv出力--------------------------------------
 df_f_state_judge.index = df.index
 df_a = pd.merge(df, df_f_state_judge, how='outer', left_index = True, right_index = True)
-csv.get_candlestick_and_create_csv(df_a,"./debug_result/急騰落検知結果11")
+csv.get_candlestick_and_create_csv(df_a,"./debug_result/急騰落検知結果_2年_レンジ判断前")
 # ------------------------------------------------------------------------------
 
 

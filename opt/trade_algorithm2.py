@@ -165,7 +165,7 @@ class trade_algorithm_2:
             "max": 0.0,
             "min": 0.0,
             "renge_width": 0.0,
-            "previus_value": 0.0
+            "fall_raise_value": 0.0
         }
 
     
@@ -199,7 +199,7 @@ class trade_algorithm_2:
             if change_val_high - change_val_low > a1 * xp ** (5) + a2 * xp ** (4) + a3 * xp ** (3) + a4 * xp ** (2) + a5 * xp + raise_value:
                 max_index = numpy.argmax(df_candlestick["high"][i - candle_num + 1 : i + 1])
                 min_index = numpy.argmin(df_candlestick["low"][i - candle_num + 1 : i + 1])
-                self.renge["previus_value"] = change_val_high - change_val_low
+                self.renge["fall_raise_value"] = change_val_high - change_val_low
 
                 if   max_index > min_index:
                     # 急騰と判断。上書き禁止風  ★★ただし、上がって下がっての可能性も全然ありえるので、必ずどちらか一つであろう3毎に分けて判断。対応必要ないかも
@@ -228,7 +228,7 @@ class trade_algorithm_2:
                 
                 if df_candlestick["low"][i] < low and df_candlestick["close"][i] < close_min:
                     f_state_judge[i] = 0
-                    # f_state_judge = self.judge_renge_for_rf_detect(df_candlestick, f_state_judge, self.renge["previus_value"])
+                    # f_state_judge = self.judge_renge_for_rf_detect(df_candlestick, f_state_judge, self.renge["fall_raise_value"])　# 妥当性検証は次のチャネル引く際に包含する
                 elif  not (df_candlestick["low"][i] < low) or not (df_candlestick["close"][i] < close_min):
                     f_state_judge[i] = 2
 
@@ -240,14 +240,14 @@ class trade_algorithm_2:
                 
                 if df_candlestick["high"][i] > high and df_candlestick["close"][i] > close_max:
                     f_state_judge[i] = 0
-                    # f_state_judge = self.judge_renge_for_rf_detect(df_candlestick, f_state_judge, self.renge["previus_value"])
+                    # f_state_judge = self.judge_renge_for_rf_detect(df_candlestick, f_state_judge, self.renge["fall_raise_value"])　# 妥当性検証は次のチャネル引く際に包含する
                 elif  (df_candlestick["high"][i] < high) or (df_candlestick["close"][i] < close_max):
                     f_state_judge[i] = -2
 
         return f_state_judge
         
     
-    def raise_fall_detection_ctrl(self,df_candlestick: pd.DataFrame,candle_intarval, df_f_state_judge: pd.DataFrame):
+    def raise_fall_detection_ctrl(self,df_candlestick: pd.DataFrame, candle_intarval, df_f_state_judge: pd.DataFrame, detect_start):
         '''
         逐一実行用。df_state_judgeは、はじめは、500の空のデータフレームを引数に入力する必要あり。以降は返却値を再度引数に指定するだけ。追加の部分だけやる。
         '''
@@ -255,7 +255,7 @@ class trade_algorithm_2:
         f_state_judge = df_f_state_judge['state_judge'].to_list()
         # print(f_state_judge)
 
-        if f_state_judge[0] == 0:
+        if detect_start:
             # 値が空欄の場合
             # iをdf_candlestickの長さ分回す。# loopでは、500程度。シミュレーションでは、1万以上
             for i in range(len(df_candlestick.index)):
@@ -304,7 +304,7 @@ class trade_algorithm_2:
 
         return (max_value_ad, min_value_ad, (max_value_ad - min_value_ad))
 
-    def judge_renge_for_rf_detect(self, df_candlestick: pd.DataFrame, f_state_judge: list, previous_value):
+    def judge_renge_for_rf_detect(self, df_candlestick: pd.DataFrame, f_state_judge: list, fall_raise_value):
         '''
         急騰落の判定後に、その妥当性を判断し、レンジと判断した場合は修正する。
         '''
@@ -316,23 +316,27 @@ class trade_algorithm_2:
         rf_last_num_before, _ , _ , flug        =   self.find_raise_or_fall_backprocess(df_f_state_judge, "last", rf_start_num, flug) # ない場合は0が代入される
 
         # # レンジ幅の計算ただし、rf_last_num_beforeとrf_start_numの間が1の場合はエラーが起きるので、更に一つ前で考える
-        if rf_start_num - rf_last_num_before > 1 and double_judge == False:
+        if rf_start_num - rf_last_num_before > 1 and double_judge == False: # 急騰落の間隔が1日以上あり、レンジの計算が出来る場合。注：一番始めの急騰落はlast_num_beforeが0となり、rengeの計算が厳密には出来ないが、重要度高くないのでやってしまう。
             
             self.renge["max"], self.renge["min"], self.renge["renge_width"] = self.culculate_renge(df_candlestick, rf_last_num_before, rf_start_num)
-            f_state_judge = self.renge_condition(df_candlestick, rf_last_num, rf_start_num, self.renge["min"], self.renge["max"], self.renge["renge_width"], f_state_judge, 0, previous_value)
+            f_state_judge = self.out_of_renge_judge(df_candlestick, rf_last_num, rf_start_num, self.renge["min"], self.renge["max"], self.renge["renge_width"], f_state_judge, 0, fall_raise_value)
         
-        elif rf_start_num - rf_last_num_before <= 1 or double_judge:
+        elif (rf_start_num - rf_last_num_before <= 1 or double_judge) and self.renge["renge_width"] != 0.0: # 急騰落の間隔が0 or 1の場合　、レンジの計算が出来ないので、前回のレンジ計算結果を使用する
             
-            f_state_judge = self.renge_condition(df_candlestick, rf_last_num, rf_start_num, self.renge["min"], self.renge["max"], self.renge["renge_width"], f_state_judge, 1, previous_value)
+            f_state_judge = self.out_of_renge_judge(df_candlestick, rf_last_num, rf_start_num, self.renge["min"], self.renge["max"], self.renge["renge_width"], f_state_judge, 1, fall_raise_value)
         
+        elif (rf_start_num - rf_last_num_before <= 1 or double_judge) and self.renge["renge_width"] == 0.0:
+            print("急騰落の妥当性検証を実施したいが、一番始めに十分なレンジがありません。多分急騰落の間隔が0 or 1であるデータが始めに来てしまっています")
+
         return f_state_judge
 
-    def renge_condition(self, df_candlestick, rf_last_num, rf_start_num, r_min_just_before, r_max_just_before, r_width, f_state_judge, flug, previous_value):
+    def out_of_renge_judge(self, df_candlestick, rf_last_num, rf_start_num, min_value_just_before, max_value_just_before, width_value, f_state_judge, flug, fall_raise_value):
         # 特殊条件定義
-        condition_A = previous_value > r_width
-        condition_B = df_candlestick["low"][rf_last_num] < r_min_just_before - r_width/3
-        condition_C = df_candlestick["high"][rf_last_num] > r_max_just_before + r_width/3
+        condition_A = fall_raise_value > width_value
+        condition_B = df_candlestick["low"][rf_last_num] < min_value_just_before - width_value/3
+        condition_C = df_candlestick["high"][rf_last_num] > max_value_just_before + width_value/3
 
+        # フラグで処理を分けている理由は、真逆の急騰落が続いている場合は、レンジの位置と急騰落後の位置が定義できないから
         if flug == 0:
             if not condition_B or not condition_C:
                 # 急騰落はレンジの中と判断して、f_state_judgeの該当箇所を0へ変更
