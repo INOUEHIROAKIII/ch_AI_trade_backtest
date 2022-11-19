@@ -174,53 +174,6 @@ class back_judge:
         
         return (apo_market_order[1],exe_market_order[1])
 
-class df_create_for_back:
-
-    def __init__(seif):
-        pass
-
-    def  df_convert_for_back(self,df_candlestick,h):
-        # 1分足dfをh分足に変更する
-        close_list  =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
-        open_list   =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
-        high_list   =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
-        low_list    =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
-        time_list   =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
-
-        for i in range(math.floor((len(df_candlestick.index) - 60*9)/h)):
-            # if (i >= 1):
-                high_list[i]    =   max(df_candlestick["high"][(i)*h + 60*9:(i+1)*h + 60*9])
-                low_list[i]     =   min(df_candlestick["low"][(i)*h + 60*9:(i+1)*h + 60*9])
-                open_list[i]    =   df_candlestick["open"][(i)*h + 60*9]
-                close_list[i]   =   df_candlestick["close"][(i+1)*h + 60*9]
-                time_list[i]    =   df_candlestick.index[(i)*h + 60*9] # ★最終確認しとく
-        
-        new_candleList =  list(zip(time_list, open_list, high_list, low_list, close_list))
-        new_df = pd.DataFrame(new_candleList, columns = ['time', 'open', 'high','low','close'])
-        return new_df
-
-    def  df_convert_for_debug(self,df_candlestick,h):
-        # 1分足dfをh分足に変更する
-        close_list  =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
-        open_list   =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
-        high_list   =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
-        low_list    =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
-        time_list   =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
-
-        for i in range(math.floor((len(df_candlestick.index) - 60*9)/h)):
-            # if (i >= 1):
-                high_list[i]    =   max(df_candlestick["high"][(i)*h + 60*9:(i+1)*h + 60*9])
-                low_list[i]     =   min(df_candlestick["low"][(i)*h + 60*9:(i+1)*h + 60*9])
-                open_list[i]    =   df_candlestick["open"][(i)*h + 60*9]
-                close_list[i]   =   df_candlestick["close"][(i+1)*h + 60*9]
-                time_list[i]    =   df_candlestick.index[(i)*h + 60*9] # ★最終確認しとく
-        
-        # dti = pd.DatetimeIndex(time_list)
-        new_candleList =  zip(dates.date2num(time_list), open_list, high_list, low_list, close_list)
-        
-        # new_df = pd.DataFrame(new_candleList, columns = ['open', 'high','low','close'], index = dti)
-        return new_candleList
-
 
         # 実際のorderでの様々なパターンを想定し、かかるコストをよりリアルに算出する
         # 1. limit 0.0001、market 0.0006

@@ -1,6 +1,7 @@
 import describe
 import optimization
 import signal
+import simulation_ctrl
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
@@ -24,12 +25,21 @@ if __name__ == '__main__':# if __name__=='__main__': はこのPythonファイル
     symbol = "BTCUSDT"
     size = 0.001
 
-    
-    # バックテスト
+    si = simulation_ctrl.simu_ctrl()
 
-    fileName = "BTCUSDT_1か月_2022_8_9_23.csv"
-    # fileName = "to_csv_out.csv"
-    backtest.describeResult(entryTerm=backtest.entryTerm, closeTerm=backtest.closeTerm, fileName=fileName , rangeTh=backtest.rangeTh, rangeTerm=backtest.rangeTerm,  originalWaitTerm=backtest.waitTerm, waitTh=backtest.waitTh, candleTerm=backtest.candleTerm,showFigure=True, cost=backtest.cost)
+    
+    # シミュレーション用csvの作成
+
+    # バックテスト
+    si.simulation_start()
+
+
+
+    # 以前バックテスト
+
+    # fileName = "BTCUSDT_1か月_2022_8_9_23.csv"
+    # # fileName = "to_csv_out.csv"
+    # backtest.describeResult(entryTerm=backtest.entryTerm, closeTerm=backtest.closeTerm, fileName=fileName , rangeTh=backtest.rangeTh, rangeTerm=backtest.rangeTerm,  originalWaitTerm=backtest.waitTerm, waitTh=backtest.waitTh, candleTerm=backtest.candleTerm,showFigure=True, cost=backtest.cost)
 
 
 

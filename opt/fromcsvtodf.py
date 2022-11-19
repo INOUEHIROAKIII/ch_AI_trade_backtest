@@ -1,11 +1,13 @@
 import datetime
 import pandas as pd
 import csv
+import math
+import matplotlib.dates as dates
 
 class csv_to_df:
     
     def __init__(self):
-        pass
+        self.convert = df_create_for_back()
 
     def fromListToDF(self, candleStick):
         """
@@ -38,3 +40,64 @@ class csv_to_df:
         print("読み込み完了")
         candleStick = [[float(i) for i in data] for data in candleStick]
         return candleStick
+
+    def prepare_candledata_fromcsv(self, fileName, candle_intarval):
+        # ----------------- csvからローソクデータを取り込む ------------------------------
+        candleStick = self.readDataFromFile(fileName)
+        # ------------------------------------------------------------------------------
+        # ----------------- 取得したローソク足データをデータフレームへ変換 ----------------
+        print("DFに変換します")
+        df_candleStick = self.fromListToDF(candleStick)
+        print("DF変換完了しました")
+        # ------------------------------------------------------------------------------
+        # -------------1分足のデータを違う足のローソク足データへdf変換---------------------
+        df = self.convert.df_convert_for_back(df_candleStick, candle_intarval)
+        return df
+        # df2 = convert.df_convert_for_debug(df_candleStick,1440)
+
+class df_create_for_back:
+
+    def __init__(seif):
+        pass
+
+    def  df_convert_for_back(self,df_candlestick,h):
+        # 1分足dfをh分足に変更する
+        close_list  =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
+        open_list   =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
+        high_list   =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
+        low_list    =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
+        time_list   =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
+
+        for i in range(math.floor((len(df_candlestick.index) - 60*9)/h)):
+            # if (i >= 1):
+                high_list[i]    =   max(df_candlestick["high"][(i)*h + 60*9:(i+1)*h + 60*9])
+                low_list[i]     =   min(df_candlestick["low"][(i)*h + 60*9:(i+1)*h + 60*9])
+                open_list[i]    =   df_candlestick["open"][(i)*h + 60*9]
+                close_list[i]   =   df_candlestick["close"][(i+1)*h + 60*9]
+                time_list[i]    =   df_candlestick.index[(i)*h + 60*9] # ★最終確認しとく
+        
+        new_candleList =  list(zip(time_list, open_list, high_list, low_list, close_list))
+        new_df = pd.DataFrame(new_candleList, columns = ['time', 'open', 'high','low','close'])
+        return new_df
+
+    def  df_convert_for_debug(self,df_candlestick,h):
+        # 1分足dfをh分足に変更する
+        close_list  =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
+        open_list   =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
+        high_list   =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
+        low_list    =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
+        time_list   =   [0 for i in range(math.floor(len(df_candlestick.index)/h)-1)]
+
+        for i in range(math.floor((len(df_candlestick.index) - 60*9)/h)):
+            # if (i >= 1):
+                high_list[i]    =   max(df_candlestick["high"][(i)*h + 60*9:(i+1)*h + 60*9])
+                low_list[i]     =   min(df_candlestick["low"][(i)*h + 60*9:(i+1)*h + 60*9])
+                open_list[i]    =   df_candlestick["open"][(i)*h + 60*9]
+                close_list[i]   =   df_candlestick["close"][(i+1)*h + 60*9]
+                time_list[i]    =   df_candlestick.index[(i)*h + 60*9] # ★最終確認しとく
+        
+        # dti = pd.DatetimeIndex(time_list)
+        new_candleList =  zip(dates.date2num(time_list), open_list, high_list, low_list, close_list)
+        
+        # new_df = pd.DataFrame(new_candleList, columns = ['open', 'high','low','close'], index = dti)
+        return new_candleList
